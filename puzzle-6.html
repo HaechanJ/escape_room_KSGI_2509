@@ -22,6 +22,7 @@
     <div class="card">
       <h1 class="title">문제 6</h1>
       <p class="desc">정해진 순서대로 카드를 스캔하세요. (오답 시 처음부터)</p>
+      <p>카드는 진행자에게 와서 받아가시면 됩니다. 문제는 풀고 싶은 곳에서 푸시면 됩니다.</p>
       <div class="seq">현재 진행: <span id="curSeq">—</span></div>
       <div id="msg" class="msg"></div>
       <div class="muted">같은 카드를 연속으로 대면 무시됩니다.</div>
@@ -30,10 +31,10 @@
   <script src="script.js"></script>
   <script>
           // 아래와 같이 NFC 인코딩 진행
-          // "https://your-domain.com/nfc-order.html?team=A&nfc=A&next=final-page.html&seq=A,B,C,D"
-          // "https://your-domain.com/nfc-order.html?team=A&nfc=B&next=final-page.html&seq=A,B,C,D"
-          // "https://your-domain.com/nfc-order.html?team=A&nfc=C&next=final-page.html&seq=A,B,C,D"
-          // "https://your-domain.com/nfc-order.html?team=A&nfc=D&next=final-page.html&seq=A,B,C,D"
+          // "https://haechanj.github.io/escape_room_KSGI_2509/puzzle-6.html?team=A&nfc=A&next=puzzle-7.html&seq=A,B,C,D"
+          // "https://haechanj.github.io/escape_room_KSGI_2509/puzzle-6.html?team=A&nfc=B&next=puzzle-7.html&seq=A,B,C,D"
+          // "https://haechanj.github.io/escape_room_KSGI_2509/puzzle-6.html?team=A&nfc=C&next=puzzle-7.html&seq=A,B,C,D"
+          // "https://haechanj.github.io/escape_room_KSGI_2509/puzzle-6.html?team=A&nfc=D&next=puzzle-7.html&seq=A,B,C,D"
   (function(){
     const qs   = new URLSearchParams(location.search);
     const team = (qs.get("team") || "A").toUpperCase();
