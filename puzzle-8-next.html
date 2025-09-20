@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 8</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="main">
+    <h1>축하합니다!!!</h1>
+    <p class="lead">다음 장소로 이동해 주시면 문제가 기다리고 있습니다 ^-----^</p>
+      <!-- 팀별 표시 영역 (JS가 채웁니다) -->
+    <section id="qA" class="card teamQ" style="display:none">
+      <h2>팀 A</h2>
+      <div class="puzzle-lines" id="linesA"></div>
+    </section>
+
+    <section id="qB" class="card teamQ" style="display:none">
+      <h2>팀 B</h2>
+      <div class="puzzle-lines" id="linesB"></div>
+    </section>
+
+    <section id="qC" class="card teamQ" style="display:none">
+      <h2>팀 C</h2>
+      <div class="puzzle-lines" id="linesC"></div>
+    </section>
+
+    <section id="qD" class="card teamQ" style="display:none">
+      <h2>팀 D</h2>
+      <div class="puzzle-lines" id="linesD"></div>
+    </section>
+    <!--정답지엔 다음 이동 장소가 표시되어 있습니다. 그 다음 장소로 이동하면 라이트와 종이가 준비되어 있습니다.-->
+    <!--A팀: 1회의실/ B팀:2회의실/ C팀: 응접실/ D팀: 화광회실-->
+  </main>
+  
+  <script src="script.js"></script>
+   <script>
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase();
+    document.getElementById("title").textContent = `문제 2 — 팀 ${team}`;
+
+// 기호 강조용 변환 함수
+function highlightSymbols(line) {
+  // □,◇,▷,△,○,◁ 같은 기호를 span으로 감싸기
+  return line.replace(/([□◇▷△○◁]+)/g, '<span class="symbol">$1</span>');
+}
+
+const linesByTeam = {
+  A: ["1층회의실"],
+  B: ["2회의실"],
+  C: ["응접실"],
+  D: ["화광회실"]
+};
+
+  const lines = linesByTeam[team] || [];
+  const targetLinesEl = document.getElementById("lines" + team);
+
+// join 대신 줄마다 HTML 변환 후 합치기
+targetLinesEl.innerHTML = lines.map(highlightSymbols).join("<br>");
+
+        // 표시/정답/다음 설정
+    document.querySelectorAll(".teamQ").forEach(el => el.style.display = "none");
+    const active = document.getElementById("q" + team);
+    if (active) active.style.display = "block";
+
+    // 기호 강조 변환: 기호 묶음을 <span class="symbol">로 감싸서 색/볼드 적용
+    function highlightSymbols(line) {
+      return line.replace(/([□◇▷△○◁]+)/g, '<span class="symbol">$1</span>');
+    }
+    if (targetLinesEl) {
+      targetLinesEl.innerHTML = lines.map(highlightSymbols).join("<br>");
+    }
+
+    // 하단 도크 검증용 속성 세팅
+    const body = document.body;
+    if (answersByTeam[team]) body.setAttribute("data-answers", answersByTeam[team]);
+    if (nextByTeam[team])    body.setAttribute("data-target",  nextByTeam[team]);
+  </script>
+</body>
+</html>
