@@ -33,3 +33,6 @@
 ## Notes
 - LocalStorage is **per device & browser**. Team progress is isolated by `?team=` and key prefixes.
 - Use distinct NFC tag IDs (`nfc=A|B|C|D`) and keep the required sequence in `seq` param.
+
+## 그럼 시작해 볼까
+<a href="https://haechanj.github.io/escape_room_KSGI_2509/puzzle-2-team-lines.html"> 문제 시작</a>
