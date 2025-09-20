@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 6</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .wrap { max-width:min(860px,92vw); margin:40px auto 0; padding:16px; text-align:center; }
+    .card { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:16px; padding:24px; }
+    .title{ font-size:1.35rem; margin:0 0 6px; }
+    .desc { color:#bdbdbd; margin:0 0 12px; }
+    .seq  { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#0f0f0f; border:1px solid #333; border-radius:10px; padding:10px 12px; display:inline-block; }
+    .msg  { margin-top:14px; font-weight:800; min-height:1.5em; }
+    .ok   { color:#7cfc9c; }
+    .err  { color:#ff6b6b; }
+    .muted{ color:#8a8a8a; font-size:.92rem; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1 class="title">문제 6</h1>
+      <p class="desc">정해진 순서대로 카드를 스캔하세요. (오답 시 처음부터)</p>
+      <div class="seq">현재 진행: <span id="curSeq">—</span></div>
+      <div id="msg" class="msg"></div>
+      <div class="muted">같은 카드를 연속으로 대면 무시됩니다.</div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+  <script>
+          // 아래와 같이 NFC 인코딩 진행
+          // "https://your-domain.com/nfc-order.html?team=A&nfc=A&next=final-page.html&seq=A,B,C,D"
+          // "https://your-domain.com/nfc-order.html?team=A&nfc=B&next=final-page.html&seq=A,B,C,D"
+          // "https://your-domain.com/nfc-order.html?team=A&nfc=C&next=final-page.html&seq=A,B,C,D"
+          // "https://your-domain.com/nfc-order.html?team=A&nfc=D&next=final-page.html&seq=A,B,C,D"
+  (function(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase();
+    const tag  = (qs.get("nfc") || "").toUpperCase().trim();
+    const next = qs.get("next") || "final.html";
+    const seqParam = (qs.get("seq") || "A,B,C,D").split(",").map(s=>s.toUpperCase().trim()).filter(Boolean);
+
+    const LS_SEQ   = `EG_${team}_NFC_SEQ`;
+    const LS_LAST  = `EG_${team}_NFC_LAST_TS`;
+    const LS_LASTID= `EG_${team}_NFC_LAST_ID`;
+
+    const GAP_LIMIT_SEC = 0; // 0 = 제한 없음
+    const FAIL_ON_SAME_CONSECUTIVE = false; // true면 연속 동일 태그는 실패 처리
+
+    function go(url){
+      if (window.__EG_goWithTeam) { window.__EG_goWithTeam(url); }
+      else {
+        const sep = url.includes("?") ? "&" : "?";
+        location.href = `${url}${sep}team=${encodeURIComponent(team)}`;
+      }
+    }
+
+    const curSeqEl  = document.getElementById("curSeq");
+    const msgEl     = document.getElementById("msg");
+
+    let curSeq = [];
+    try { curSeq = JSON.parse(localStorage.getItem(LS_SEQ) || "[]"); if (!Array.isArray(curSeq)) curSeq = []; } catch { curSeq = []; }
+
+    if (GAP_LIMIT_SEC > 0) {
+      const lastTs = parseInt(localStorage.getItem(LS_LAST) || "0", 10);
+      if (lastTs) {
+        const now = Math.floor(Date.now()/1000);
+        if ((now - lastTs) > GAP_LIMIT_SEC) {
+          curSeq = [];
+          localStorage.removeItem(LS_SEQ);
+        }
+      }
+    }
+
+    const lastId = localStorage.getItem(LS_LASTID) || "";
+    if (tag && tag === lastId) {
+      if (FAIL_ON_SAME_CONSECUTIVE) {
+        msgEl.textContent = "❌ 같은 태그를 연속으로 스캔했습니다. 처음부터 다시!";
+        msgEl.className = "msg err";
+        localStorage.removeItem(LS_SEQ);
+        localStorage.removeItem(LS_LAST);
+        localStorage.setItem(LS_LASTID, tag);
+        return;
+      } else {
+        msgEl.textContent = "동일 태그 연속 스캔은 무시됩니다. 다음 태그로 진행하세요.";
+        msgEl.className = "msg";
+        curSeqEl.textContent = curSeq.length ? curSeq.join(" → ") : "—";
+        localStorage.setItem(LS_LAST, Math.floor(Date.now()/1000));
+        return;
+      }
+    }
+
+    if (tag) {
+      const expected = seqParam[curSeq.length];
+      if (tag !== expected) {
+        msgEl.textContent = `❌ 순서가 틀렸습니다! 처음부터 다시.`;
+        msgEl.className = "msg err";
+        localStorage.removeItem(LS_SEQ);
+        localStorage.setItem(LS_LASTID, tag);
+        localStorage.setItem(LS_LAST, Math.floor(Date.now()/1000));
+        curSeq = [];
+      } else {
+        curSeq.push(tag);
+        localStorage.setItem(LS_SEQ, JSON.stringify(curSeq));
+        localStorage.setItem(LS_LASTID, tag);
+        localStorage.setItem(LS_LAST, Math.floor(Date.now()/1000));
+
+        if (curSeq.length < seqParam.length) {
+          msgEl.textContent = `✔ 올바릅니다! (${curSeq.length}/${seqParam.length}) 계속 진행.`;
+          msgEl.className = "msg ok";
+        } else {
+          msgEl.textContent = "🎉 성공! 이동합니다…";
+          msgEl.className = "msg ok";
+          localStorage.removeItem(LS_SEQ);
+          setTimeout(()=> go(next), 900);
+        }
+      }
+    } else {
+      msgEl.textContent = "이 페이지는 NFC 태그를 통해 접근해야 합니다.";
+    }
+
+    curSeqEl.textContent = curSeq.length ? curSeq.join(" → ") : "—";
+  })();
+  </script>
+  
+  <script>
+  // === 설정 ===
+  const HINT_DELAY_SEC = 1060; // 18분
+  const COMMON_HINT_TEXT =
+    "같은 색깔끼리 묶어서 한곳으로 모아보시면 숫자가 나타납니다. 그것을 작은 순서대로 배치하면 색깔 순서가 나오고 해당 색깔 순서로 물체를 갖다 대시면 됩니다.";
+
+  // 힌트 UI 만들기 (처음엔 숨김)
+  const hintBox = document.createElement("div");
+  hintBox.className = "card";
+  hintBox.style.display = "none";
+  hintBox.id = "autoHint";
+  hintBox.innerHTML =
+    `<strong>힌트</strong><div id="autoHintBody" class="small" style="margin-top:8px;"></div>`;
+  // 팀 섹션이 있으면 그 안에, 없으면 본문 끝에 부착
+  (document.querySelector(".teamQ[style*='block']") || document.querySelector(".main"))
+    .appendChild(hintBox);
+
+  function revealHint() {
+    document.getElementById("autoHintBody").textContent = COMMON_HINT_TEXT;
+    hintBox.style.display = "";
+  }
+
+  (function scheduleHintByGlobalTimer(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase(); // 키 접두에 필요
+    const START_KEY = `EG_${team}_TIMER_START_MS`;      // 전역 타이머 시작시각(ms)
+
+    const startMs = parseInt(localStorage.getItem(START_KEY) || "0", 10);
+    if (startMs) {
+      const elapsed = Math.floor((Date.now() - startMs) / 1000);
+      if (elapsed >= HINT_DELAY_SEC) {
+        revealHint();              // 이미 5분 지났다면 즉시
+      } else {
+        setTimeout(revealHint, (HINT_DELAY_SEC - elapsed) * 1000);
+      }
+    } else {
+      // 안전장치: 전역 타이머가 아직 없으면 페이지 로드 기준으로 딜레이
+      setTimeout(revealHint, HINT_DELAY_SEC * 1000);
+    }
+
+    // 운영/테스트용: 즉시 표시 스위치 (?revealHint=1)
+    if (qs.get("revealHint") === "1") revealHint();
+  })();
+</script>
+</body>
+</html>

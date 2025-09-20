@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제2</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- 첫 진입 페이지에서 타이머 시작 (30분) -->
+   <meta name="timer-start" content="true">
+   <meta name="timer-duration-sec" content="1800">
+   <meta name="timer-expire-target" content="timeup.html">
+</head>
+<body 
+  data-answers-a="apple" data-answers-b="banana" 
+  data-answers-c="cherry" data-answers-d="date"
+  data-target="next.html">
+  <main class="main">
+    <h1 id="title">문제2</h1>
+    <h2 id="content">"정답"으로 이동하세요.</h2>
+    <p class="lead" id="question">팀별 문제를 여기에 표시</p>
+  </main>
+  <script src="script.js"></script>
+  <script>
+    const qs = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase();
+
+    // 문제 내용
+    const questions = {
+      A: ["□◇ NEST","▷△ EXPERIMENT","○ DRAGON","◇○▷=?"],
+      B: ["□◇◁TUESDAY","▷△EXPERIMENT","○ ROCK","□○▷=?"],
+      C: ["○△ PEACE","□◇◁ TUESDAY","▷△ EXPERIMENT","○□▷=?"],
+      D: ["○△ VACATION","▷△ EXPERIMENT","□ CRAB","○□▷=?"],
+    };
+
+    document.getElementById("question").textContent = questions[team] || "문제가 없습니다.";
+
+    // 정답 속성을 team별로 연결
+    const body = document.body;
+    const answerKey = body.getAttribute(`data-answers-${team.toLowerCase()}`);
+    body.setAttribute("data-answers", answerKey);
+  </script>
+</body>
+</html>

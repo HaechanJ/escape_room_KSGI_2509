@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 7</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-answers="KSGI" data-target="puzzle-8.html">
+  <main class="main">
+    <h1>문제 7</h1>
+    <p class="lead">아래 그림을 보고 규칙을 찾아 풀어보세요.</p>
+    <div class="card">
+      <img src="img/7.png" style="max-width:100%; height:auto;">
+      정답은 영어로 4글자입니다.
+    </div>
+  </main>
+  <script src="script.js"></script>
+  <script>
+  // === 설정 ===
+  const HINT_DELAY_SEC = 1260; // 21분
+  const COMMON_HINT_TEXT =
+    "힌트: 화살표가 실선과 점선으로 이루어져 있고 색깔이 다릅니다. 색깔은 그림의 글자 모음,자음과 똑같죠? 점선은 표의 경계선이 점선으로 된 부분이 있습니다. 이것을 이용하여 실선으로 된 모음,자음을 합쳐서 적어주시고 그다음 점선으로 된 경게선을 그대로 적어주시면 영어 알파벳이 됩니다. 이런 규칙을 이용해 풀어보시면 됩니다.";
+
+  // 힌트 UI 만들기 (처음엔 숨김)
+  const hintBox = document.createElement("div");
+  hintBox.className = "card";
+  hintBox.style.display = "none";
+  hintBox.id = "autoHint";
+  hintBox.innerHTML =
+    `<strong>힌트</strong><div id="autoHintBody" class="small" style="margin-top:8px;"></div>`;
+  // 팀 섹션이 있으면 그 안에, 없으면 본문 끝에 부착
+  (document.querySelector(".teamQ[style*='block']") || document.querySelector(".main"))
+    .appendChild(hintBox);
+
+  function revealHint() {
+    document.getElementById("autoHintBody").textContent = COMMON_HINT_TEXT;
+    hintBox.style.display = "";
+  }
+
+  (function scheduleHintByGlobalTimer(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase(); // 키 접두에 필요
+    const START_KEY = `EG_${team}_TIMER_START_MS`;      // 전역 타이머 시작시각(ms)
+
+    const startMs = parseInt(localStorage.getItem(START_KEY) || "0", 10);
+    if (startMs) {
+      const elapsed = Math.floor((Date.now() - startMs) / 1000);
+      if (elapsed >= HINT_DELAY_SEC) {
+        revealHint();              // 이미 5분 지났다면 즉시
+      } else {
+        setTimeout(revealHint, (HINT_DELAY_SEC - elapsed) * 1000);
+      }
+    } else {
+      // 안전장치: 전역 타이머가 아직 없으면 페이지 로드 기준으로 딜레이
+      setTimeout(revealHint, HINT_DELAY_SEC * 1000);
+    }
+
+    // 운영/테스트용: 즉시 표시 스위치 (?revealHint=1)
+    if (qs.get("revealHint") === "1") revealHint();
+  })();
+</script>
+</body>
+</html>

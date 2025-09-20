@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 5</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-answers="영희3민수8" data-target="puzzle-6.html">
+  <main class="main">
+    <h1>문제 5</h1>
+    <p class="lead">다음 문제를 풀어주세요. 정답은"이름숫자이름숫자"로 공백없이 입력</p>
+    <p class="lead">정답 입력 예시: 해찬2수호9</p>
+    <div class="card">
+      <h3>•	좌석은 왼쪽에서 오른쪽으로 1번 ~ 10번 일렬 배치.</h3>
+      <h3>•	등장인물 10명: 철수, 영희, 민수, 지민, 수진, 현우, 민아, 도윤, 서연, 태민</h3>
+      <h3>•	아래 조건을 모두 만족할 때, 영희와 민수의 정확한 좌석 번호를 구하라.</h3>
+      <h1 style="text-align: center"><br>조건</h1>
+      <p>1.	수진은 4번 자리에 앉고, 민아는 수진의 바로 오른쪽에 앉는다.</p>
+      <p>→ (수진=4, 민아=5)</p>
+      <p>2.	현우는 가운데 두 자리 중 오른쪽에 앉는다.</p>
+      <p>→ (현우=6)</p>
+      <p>3.	지민은 태민보다 왼쪽에 있으며, 둘 사이에 정확히 두 명이 있다.</p>
+      <p>→ 가능한 쌍은 (1,4) (2,5) (3,6) (4,7) (5,8) (6,9) (7,10)</p>
+      <p>4.	민수는 지민의 바로 오른쪽에 앉는다.</p>
+      <p>→ (민수 = 지민+1)</p>
+      <p>5.	서연은 끝자리(1번/10번)가 아니다.</p>
+      <p>6.	도윤은 9번이 아니다.</p>
+      <p>7.	철수는 소수 번호(2,3,5,7) 자리에 앉는다.</p>
+      <p>8.	영희는 수진(4번)의 왼쪽 어딘가에 앉되, 철수보다 오른쪽에 앉는다.</p>
+      <p>9.	1번 자리는 받침(종성)이 있는 이름이 앉는다.</p>
+      <p>o	받침 있는 이름: 지민, 수진, 도윤, 서연, 태민</p>
+      <p>o	받침 없는 이름: 철수, 영희, 민수, 현우, 민아</p>
+    </div>
+  </main>
+  <script src="script.js"></script>
+  <script>
+  // === 설정 ===
+  const HINT_DELAY_SEC = 900; // 15분
+  const COMMON_HINT_TEXT =
+    "힌트: 힌트를 드리기 힘드네요. 정답란에 영희3민수8 로 입력하시면 됩니다. ^^;";
+
+  // 힌트 UI 만들기 (처음엔 숨김)
+  const hintBox = document.createElement("div");
+  hintBox.className = "card";
+  hintBox.style.display = "none";
+  hintBox.id = "autoHint";
+  hintBox.innerHTML =
+    `<strong>힌트</strong><div id="autoHintBody" class="small" style="margin-top:8px;"></div>`;
+  // 팀 섹션이 있으면 그 안에, 없으면 본문 끝에 부착
+  (document.querySelector(".teamQ[style*='block']") || document.querySelector(".main"))
+    .appendChild(hintBox);
+
+  function revealHint() {
+    document.getElementById("autoHintBody").textContent = COMMON_HINT_TEXT;
+    hintBox.style.display = "";
+  }
+
+  (function scheduleHintByGlobalTimer(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase(); // 키 접두에 필요
+    const START_KEY = `EG_${team}_TIMER_START_MS`;      // 전역 타이머 시작시각(ms)
+
+    const startMs = parseInt(localStorage.getItem(START_KEY) || "0", 10);
+    if (startMs) {
+      const elapsed = Math.floor((Date.now() - startMs) / 1000);
+      if (elapsed >= HINT_DELAY_SEC) {
+        revealHint();              // 이미 5분 지났다면 즉시
+      } else {
+        setTimeout(revealHint, (HINT_DELAY_SEC - elapsed) * 1000);
+      }
+    } else {
+      // 안전장치: 전역 타이머가 아직 없으면 페이지 로드 기준으로 딜레이
+      setTimeout(revealHint, HINT_DELAY_SEC * 1000);
+    }
+
+    // 운영/테스트용: 즉시 표시 스위치 (?revealHint=1)
+    if (qs.get("revealHint") === "1") revealHint();
+  })();
+</script>
+</body>
+</html>

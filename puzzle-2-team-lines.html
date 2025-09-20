@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 2</title>
+  <link rel="stylesheet" href="style.css" />
+    <!-- 첫 진입 페이지에서 타이머 시작 (30분) -->
+  <meta name="timer-start" content="true">
+  <meta name="timer-duration-sec" content="1800">
+  <meta name="timer-expire-target" content="timeup.html">
+  <style>
+    /* 퍼즐 줄맞춤을 위해 고정폭 + 줄바꿈 유지 */
+    .puzzle-lines {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+      font-size: 1.08rem;
+      line-height: 1.6;
+      white-space: pre-wrap; /* \n 줄바꿈/여러 공백 유지 */
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body data-target="puzzle-3.html">
+  <main class="main">
+    <h1 id="title">문제2</h1>
+    <p class="lead">다음 문제를 풀어주세요</p>
+
+    <!-- 팀별 표시 영역 (JS가 채웁니다) -->
+    <section id="qA" class="card teamQ" style="display:none">
+      <h2>팀 A</h2>
+      <div class="puzzle-lines" id="linesA"></div>
+    </section>
+
+    <section id="qB" class="card teamQ" style="display:none">
+      <h2>팀 B</h2>
+      <div class="puzzle-lines" id="linesB"></div>
+    </section>
+
+    <section id="qC" class="card teamQ" style="display:none">
+      <h2>팀 C</h2>
+      <div class="puzzle-lines" id="linesC"></div>
+    </section>
+
+    <section id="qD" class="card teamQ" style="display:none">
+      <h2>팀 D</h2>
+      <div class="puzzle-lines" id="linesD"></div>
+    </section>
+
+    <div class="card small">TIP: 정답은 하단 입력란을 사용합니다. 3분 뒤에 힌트가 나타납니다.</div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase();
+    document.getElementById("title").textContent = `퍼즐 2 — 팀 ${team}`;
+
+    // ────────────────────────────────────────────────
+    // 팀별 4줄 퍼즐 (요청하신 구성 그대로)
+    // ────────────────────────────────────────────────
+    const linesByTeam = {
+      A: ["□◇ NEST","▷△ EXPERIMENT","○ DRAGON","◇○▷=?"],
+      B: ["□◇◁TUESDAY","▷△EXPERIMENT","○ ROCK","□○▷=?"],
+      C: ["○△ PEACE","□◇◁ TUESDAY","▷△ EXPERIMENT","○□▷=?"],
+      D: ["○△ VACATION","▷△ EXPERIMENT","□ CRAB","○□▷=?"]
+    };
+
+    // 팀별 정답 (원하는 값으로 바꾸세요)
+    const answersByTeam = {
+      A: "지용실",
+      B: "화락실",
+      C: "평화실",
+      D: "휴게실"
+    };
+
+    // 팀별 다음 페이지 필요 시 분기
+    const nextByTeam = { A: "puzzle-3.html", B: "puzzle-3.html", C: "puzzle-3.html", D: "puzzle-3.html" };
+
+    // 표시/정답/다음 설정
+    document.querySelectorAll(".teamQ").forEach(el => el.style.display = "none");
+    const active = document.getElementById("q" + team);
+    if (active) active.style.display = "block";
+
+    const targetLinesEl = document.getElementById("lines" + team);
+    const lines = linesByTeam[team] || ["문제가 준비되지 않았습니다.", "", "", ""];
+    if (targetLinesEl) targetLinesEl.textContent = lines.join("\n"); // <pre>처럼 줄바꿈을 그대로
+
+    // 하단 도크 검증용 속성 세팅
+    const body = document.body;
+    if (answersByTeam[team]) body.setAttribute("data-answers", answersByTeam[team]);
+    if (nextByTeam[team])    body.setAttribute("data-target",  nextByTeam[team]);
+  </script>
+
+  <script>
+  // === 설정 ===
+  const HINT_DELAY_SEC = 180; // 3분
+  const COMMON_HINT_TEXT =
+    "힌트: 영어를 해석하여 한글을 기준으로 기호를 해석하세요. 혹시 영단어를 잘 모르시겠으면 인터넷에 검색해 보세요.";
+
+  // 힌트 UI 만들기 (처음엔 숨김)
+  const hintBox = document.createElement("div");
+  hintBox.className = "card";
+  hintBox.style.display = "none";
+  hintBox.id = "autoHint";
+  hintBox.innerHTML =
+    `<strong>힌트</strong><div id="autoHintBody" class="small" style="margin-top:8px;"></div>`;
+  // 팀 섹션이 있으면 그 안에, 없으면 본문 끝에 부착
+  (document.querySelector(".teamQ[style*='block']") || document.querySelector(".main"))
+    .appendChild(hintBox);
+
+  function revealHint() {
+    document.getElementById("autoHintBody").textContent = COMMON_HINT_TEXT;
+    hintBox.style.display = "";
+  }
+
+  (function scheduleHintByGlobalTimer(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase(); // 키 접두에 필요
+    const START_KEY = `EG_${team}_TIMER_START_MS`;      // 전역 타이머 시작시각(ms)
+
+    const startMs = parseInt(localStorage.getItem(START_KEY) || "0", 10);
+    if (startMs) {
+      const elapsed = Math.floor((Date.now() - startMs) / 1000);
+      if (elapsed >= HINT_DELAY_SEC) {
+        revealHint();              // 이미 5분 지났다면 즉시
+      } else {
+        setTimeout(revealHint, (HINT_DELAY_SEC - elapsed) * 1000);
+      }
+    } else {
+      // 안전장치: 전역 타이머가 아직 없으면 페이지 로드 기준으로 딜레이
+      setTimeout(revealHint, HINT_DELAY_SEC * 1000);
+    }
+
+    // 운영/테스트용: 즉시 표시 스위치 (?revealHint=1)
+    if (qs.get("revealHint") === "1") revealHint();
+  })();
+</script>
+</body>
+</html>

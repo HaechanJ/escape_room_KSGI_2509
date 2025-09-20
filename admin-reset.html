@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>관리자 — NFC/순서 초기화</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .wrap { max-width:min(780px,92vw); margin:40px auto 0; padding:16px; }
+    .row { display:flex; gap:8px; align-items:center; margin:10px 0; }
+    input[type=text]{ padding:10px; border-radius:10px; border:1px solid #333; background:#0f0f0f; color:#eee; width:120px; }
+    button { padding:10px 14px; border-radius:10px; border:0; font-weight:800; cursor:pointer; }
+    .btn { background:#4f46e5; color:white; }
+    .btn.warn { background:#e54f4f; }
+    .card { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:16px; padding:20px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>관리자 초기화 도구</h1>
+      <div class="row">
+        <label>팀 ID</label>
+        <input id="team" type="text" value="A" />
+        <button id="btnSeq" class="btn">순서 초기화</button>
+        <button id="btnAll" class="btn warn">전체 초기화(재탭 포함)</button>
+      </div>
+      <p class="small">키 예시: EG_A_NFC_SEQ, EG_A_NFC_LAST_*, EG_A_NFC_USED_*</p>
+      <hr style="border-color:#2a2a2a; margin:16px 0;">
+      <p>URL 초기화도 가능:</p>
+      <div class="card small">
+        <div>nfc-order.html?team=A&resetSeq=1</div>
+        <div>nfc-order.html?team=A&resetAll=1</div>
+      </div>
+    </div>
+    <div class="row">
+  <label>연장할 시간(분)</label>
+  <input id="extraMin" type="number" value="5" />
+  <button id="btnExtend" class="btn">시간 연장</button>
+  </div>
+  </main>
+  <script>
+  function seqKeys(team){
+    return {
+      SEQ:  `EG_${team}_NFC_SEQ`,
+      LAST: `EG_${team}_NFC_LAST_TS`,
+      LASTID: `EG_${team}_NFC_LAST_ID`
+    };
+  }
+  function resetSequenceFor(team){
+    const k = seqKeys(team);
+    localStorage.removeItem(k.SEQ);
+    localStorage.removeItem(k.LAST);
+    localStorage.removeItem(k.LASTID);
+  }
+  function resetNfcUsedFor(team){
+    const prefix = `EG_${team}_NFC_USED_`;
+    const toDelete = [];
+    for (let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) toDelete.push(key);
+    }
+    toDelete.forEach(k => localStorage.removeItem(k));
+  }
+  document.getElementById("btnSeq").addEventListener("click", ()=>{
+    const team = (document.getElementById("team").value || "A").trim().toUpperCase();
+    resetSequenceFor(team);
+    alert(`팀 ${team} 순서 기록 초기화 완료`);
+  });
+  document.getElementById("btnAll").addEventListener("click", ()=>{
+    const team = (document.getElementById("team").value || "A").trim().toUpperCase();
+    if (!confirm(`팀 ${team}의 모든 NFC 기록을 초기화할까요?`)) return;
+    resetSequenceFor(team);
+    resetNfcUsedFor(team);
+    alert(`팀 ${team} 전체 초기화 완료`);
+  });
+ function extendTimer(team, extraMinutes){
+    const durKey = `EG_${team}_TIMER_DURATION_SEC`;
+    let dur = parseInt(localStorage.getItem(durKey) || "0", 10);
+    if (!dur) {
+      alert("현재 타이머가 설정되지 않았습니다.");
+      return;
+    }
+    dur += extraMinutes * 60;
+    localStorage.setItem(durKey, String(dur));
+    alert(`팀 ${team} 타이머를 ${extraMinutes}분 연장했습니다.`);
+  }
+
+  document.getElementById("btnExtend").addEventListener("click", ()=>{
+    const team = (document.getElementById("team").value || "A").trim().toUpperCase();
+    const extra = parseInt(document.getElementById("extraMin").value || "0", 10);
+    if (extra > 0) {
+      extendTimer(team, extra);
+    }
+  });
+  </script>
+</body>
+</html>

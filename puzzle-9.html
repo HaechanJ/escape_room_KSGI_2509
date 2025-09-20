@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>문제 9</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="main">
+    <h1>문제 9</h1>
+    <p class="lead">아래에 표시된 문제를 해결하세요</p>
+    <div>
+      <h2>단서1</h2>
+      <p>- ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+      <h2>단서2(그림 참고)</h2>
+      <img src="img/9-clock.jpg" style="max-width:100%; height:auto;">
+      <p>위 단서를 활용해 다음의 암호를 해독하세요.</p>
+      “XYVR SJJ PMKLX, PMKLX SR TETIV”
+      <p>정답은 따로 입력하지 않아도 됩니다.</p>
+      <p>위 암호를 해독하면 왜 그런지 자연히 알게 됩니다.</p>
+    </div>
+    <!--빈 종이에 UV라이트를 비추면 UV펜으로 "보성회 사명자에게 마지막 문제를 달라고 부탁하세요." 라는 글자가 적혀 있습니다.-->
+  </main>
+  <script src="script.js"></script>
+  <script>
+  // === 설정 ===
+  const HINT_DELAY_SEC = 1260; // 21분
+  const COMMON_HINT_TEXT =
+    "힌트: ABC 순서를따라 시계의 시간 숫자만큼 이동시켜 보세요. 제대로된 영어 단어가 나타납니다.";
+  // 힌트 UI 만들기 (처음엔 숨김)
+  const hintBox = document.createElement("div");
+  hintBox.className = "card";
+  hintBox.style.display = "none";
+  hintBox.id = "autoHint";
+  hintBox.innerHTML =
+    `<strong>힌트</strong><div id="autoHintBody" class="small" style="margin-top:8px;"></div>`;
+  // 팀 섹션이 있으면 그 안에, 없으면 본문 끝에 부착
+  (document.querySelector(".teamQ[style*='block']") || document.querySelector(".main"))
+    .appendChild(hintBox);
+
+  function revealHint() {
+    document.getElementById("autoHintBody").textContent = COMMON_HINT_TEXT;
+    hintBox.style.display = "";
+  }
+
+  (function scheduleHintByGlobalTimer(){
+    const qs   = new URLSearchParams(location.search);
+    const team = (qs.get("team") || "A").toUpperCase(); // 키 접두에 필요
+    const START_KEY = `EG_${team}_TIMER_START_MS`;      // 전역 타이머 시작시각(ms)
+
+    const startMs = parseInt(localStorage.getItem(START_KEY) || "0", 10);
+    if (startMs) {
+      const elapsed = Math.floor((Date.now() - startMs) / 1000);
+      if (elapsed >= HINT_DELAY_SEC) {
+        revealHint();              // 이미 5분 지났다면 즉시
+      } else {
+        setTimeout(revealHint, (HINT_DELAY_SEC - elapsed) * 1000);
+      }
+    } else {
+      // 안전장치: 전역 타이머가 아직 없으면 페이지 로드 기준으로 딜레이
+      setTimeout(revealHint, HINT_DELAY_SEC * 1000);
+    }
+
+    // 운영/테스트용: 즉시 표시 스위치 (?revealHint=1)
+    if (qs.get("revealHint") === "1") revealHint();
+  })();
+</script>
+</body>
+</html>
