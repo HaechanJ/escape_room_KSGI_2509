@@ -114,6 +114,6 @@ a.button {
 }
 
 .symbol {
-  font-weight: 800,bold;
+  font-weight: 800;
   color: #e74c3c;  /* 빨간색 예시 */
 }
