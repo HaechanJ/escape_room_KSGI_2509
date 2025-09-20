@@ -112,3 +112,8 @@ a.button {
 .dock-spacer {
   height: var(--dock-h);
 }
+
+.symbol {
+  font-weight: 800,bold;
+  color: #e74c3c;  /* 빨간색 예시 */
+}

@@ -55,16 +55,26 @@
     const team = (qs.get("team") || "A").toUpperCase();
     document.getElementById("title").textContent = `문제 2 — 팀 ${team}`;
 
-    // ────────────────────────────────────────────────
-    // 팀별 4줄 퍼즐 (요청하신 구성 그대로)
-    // ────────────────────────────────────────────────
-    const linesByTeam = {
-      A: ["□◇ NEST","▷△ EXPERIMENT","○ DRAGON","◇○▷=?"],
-      B: ["□◇◁TUESDAY","▷△EXPERIMENT","○ ROCK","□○▷=?"],
-      C: ["○△ PEACE","□◇◁ TUESDAY","▷△ EXPERIMENT","○□▷=?"],
-      D: ["○△ VACATION","▷△ EXPERIMENT","□ CRAB","○□▷=?"]
-    };
+// 기호 강조용 변환 함수
+function highlightSymbols(line) {
+  // □,◇,▷,△,○,◁ 같은 기호를 span으로 감싸기
+  return line.replace(/([□◇▷△○◁]+)/g, '<span class="symbol">$1</span>');
+}
 
+const linesByTeam = {
+  A: ["□◇ /NEST","▷△ /EXPERIMENT","○ /DRAGON","◇○▷=?"],
+  B: ["□◇◁ /TUESDAY","▷△ /EXPERIMENT","○ /ROCK","□○▷=?"],
+  C: ["○△ /PEACE","□◇◁ /TUESDAY","▷△ /EXPERIMENT","○□▷=?"],
+  D: ["○△ /VACATION","▷△ /EXPERIMENT","□ /CRAB","○□▷=?"]
+};
+
+  const lines = linesByTeam[team] || [];
+  const targetLinesEl = document.getElementById("lines" + team);
+
+// join 대신 줄마다 HTML 변환 후 합치기
+targetLinesEl.innerHTML = lines.map(highlightSymbols).join("<br>");
+
+    
     // 팀별 정답 (원하는 값으로 바꾸세요)
     const answersByTeam = {
       A: "지용실",
@@ -81,9 +91,13 @@
     const active = document.getElementById("q" + team);
     if (active) active.style.display = "block";
 
-    const targetLinesEl = document.getElementById("lines" + team);
-    const lines = linesByTeam[team] || ["문제가 준비되지 않았습니다.", "", "", ""];
-    if (targetLinesEl) targetLinesEl.textContent = lines.join("\n"); // <pre>처럼 줄바꿈을 그대로
+    // 기호 강조 변환: 기호 묶음을 <span class="symbol">로 감싸서 색/볼드 적용
+    function highlightSymbols(line) {
+      return line.replace(/([□◇▷△○◁]+)/g, '<span class="symbol">$1</span>');
+    }
+    if (targetLinesEl) {
+      targetLinesEl.innerHTML = lines.map(highlightSymbols).join("<br>");
+    }
 
     // 하단 도크 검증용 속성 세팅
     const body = document.body;
