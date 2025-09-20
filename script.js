@@ -29,7 +29,6 @@ window.__EG_goWithTeam = function(dest) {
   location.href = appendTeamParam(dest);
 };
 
-// ---------- Timer (persistent across pages) ----------
 (function setupPersistentTimer(){
   const LS_KEYS = {
     start: (team) => `EG_${team}_TIMER_START_MS`,
@@ -45,16 +44,29 @@ window.__EG_goWithTeam = function(dest) {
   const metaDurationSec   = parseInt(meta("timer-duration-sec") || "", 10);
   const metaExpireTarget  = meta("timer-expire-target") || null;
 
+  // ✅ 키를 미리 계산
+  const LS_START = LS_KEYS.start(team);
+  const LS_DUR   = LS_KEYS.dur(team);
+  const LS_EXP   = LS_KEYS.exp(team);
+
   if (shouldStartHere) {
-    const now = Date.now();
-    const dur = Number.isFinite(metaDurationSec) ? metaDurationSec : (30 * 60);
-    localStorage.setItem(LS_KEYS.start(team), String(now));
-    localStorage.setItem(LS_KEYS.dur(team), String(dur));
-    if (metaExpireTarget) localStorage.setItem(LS_KEYS.exp(team), metaExpireTarget);
+    // ✅ 이미 시작된 팀이면 다시 덮어쓰지 않음
+    const already = localStorage.getItem(LS_START);
+    if (!already) {
+      const now = Date.now();
+      const dur = Number.isFinite(metaDurationSec) ? metaDurationSec : (30 * 60);
+      localStorage.setItem(LS_START, String(now));
+      localStorage.setItem(LS_DUR, String(dur));
+      if (metaExpireTarget) localStorage.setItem(LS_EXP, metaExpireTarget);
+    }
   } else {
-    // if timer not set, do nothing (middle page access safe)
-    if (!localStorage.getItem(LS_KEYS.start(team)) || !localStorage.getItem(LS_KEYS.dur(team))) return;
-    if (metaExpireTarget) localStorage.setItem(LS_KEYS.exp(team), metaExpireTarget);
+    // ❗ 타이머가 없으면 시작 페이지로 돌려보내고 종료 (원하면 파일명 변경)
+    if (!localStorage.getItem(LS_START) || !localStorage.getItem(LS_DUR)) {
+      const startUrl = appendTeamParam("puzzle-2-team-lines.html", team); // ← 시작 페이지 경로로 수정 가능
+      location.href = startUrl;
+      return;
+    }
+    if (metaExpireTarget) localStorage.setItem(LS_EXP, metaExpireTarget);
   }
 
   function injectTimerBar(){
@@ -71,8 +83,8 @@ window.__EG_goWithTeam = function(dest) {
   const timerEl = injectTimerBar();
 
   function getRemainSec(){
-    const startMs = parseInt(localStorage.getItem(LS_KEYS.start(team)) || "0", 10);
-    const durSec  = parseInt(localStorage.getItem(LS_KEYS.dur(team)) || "0", 10);
+    const startMs = parseInt(localStorage.getItem(LS_START) || "0", 10);
+    const durSec  = parseInt(localStorage.getItem(LS_DUR) || "0", 10);
     if (!startMs || !durSec) return 0;
     const passed = Math.floor((Date.now() - startMs) / 1000);
     return Math.max(0, durSec - passed);
@@ -86,8 +98,8 @@ window.__EG_goWithTeam = function(dest) {
     const remain = getRemainSec();
     if (timerEl) timerEl.textContent = fmt(remain);
     if (remain <= 0){
-      const expUrl = localStorage.getItem(LS_KEYS.exp(team)) || metaExpireTarget;
-      localStorage.removeItem(LS_KEYS.start(team));
+      const expUrl = localStorage.getItem(LS_EXP) || metaExpireTarget;
+      localStorage.removeItem(LS_START); // 종료 시 시작키만 제거
       if (expUrl) location.href = appendTeamParam(expUrl, team);
     }
   }
@@ -182,4 +194,16 @@ window.__EG_goWithTeam = function(dest) {
   scrollHost.appendChild(spacer);
 
   // ... (중략) 이벤트 리스너 등 기존 로직 그대로
+})();
+
+(function showDeviceId(){
+  const el = document.getElementById("deviceId");
+  if (!el) return;
+  const KEY = "EG_DEVICE_ID";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10).toUpperCase();
+    localStorage.setItem(KEY, id);
+  }
+  el.textContent = `Device ID: ${id}`;
 })();
